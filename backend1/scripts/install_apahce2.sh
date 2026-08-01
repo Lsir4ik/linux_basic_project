@@ -14,7 +14,7 @@ REAL_HOME=$(eval echo "~${SUDO_USER:-$USER}")
 
 # Объявляем пути к файлам через $REAL_HOME
 # Пакет лежит в ~/linux_basic_project/ по вашему условию
-DEB_PACKAGE="${REAL_HOME}/linux_basic_project/apache2_2.4.58-1ubuntu8.15_amd64.deb"
+DEB_PACKAGE="${REAL_HOME}/packages/apache2_2.4.58-1ubuntu8.15_amd64.deb"
 NEW_CONFIG="${REAL_HOME}/linux_basic_project/configs/000-default.conf"
 NEW_STATIC="${REAL_HOME}/linux_basic_project/static/index.html"
 

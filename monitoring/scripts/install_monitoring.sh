@@ -16,7 +16,7 @@ REAL_HOME=$(eval echo "~${SUDO_USER:-$USER}")
 # ПЕРЕМЕННЫЕ ПУТЕЙ
 # ============================================================
 PROM_DEB="${REAL_HOME}/packages/prometheus_2.45.3+ds-2ubuntu0.3_amd64.deb"
-PROM_NEW_CONFIG="${REAL_HOME}/linux_basic_project/prometheus.yml"
+PROM_NEW_CONFIG="${REAL_HOME}/linux_basic_project/configs/prometheus.yml"
 PROM_TARGET_CONFIG="/etc/prometheus/prometheus.yml"
 
 GRAFANA_DEB="${REAL_HOME}/packages/grafana_12.3.3_21957728731_linux_amd64-224190-b33d09.deb"

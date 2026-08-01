@@ -14,7 +14,7 @@ REAL_HOME=$(eval echo "~${SUDO_USER:-$USER}")
 
 # Теперь безопасно объявляем пути к файлам через $REAL_HOME
 DEB_PACKAGE="${REAL_HOME}/packages/nginx_1.24.0-2ubuntu7.15_amd64.deb"
-NEW_CONFIG="${REAL_HOME}/linux_basic_project/configs/nginx.conf"
+NEW_CONFIG="${REAL_HOME}/linux_basic_project/configs/default"
 TARGET_CONFIG="/etc/nginx/sites-available/default"
 
 # Проверка наличия deb-пакета
