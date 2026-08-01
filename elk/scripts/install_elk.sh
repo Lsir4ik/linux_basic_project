@@ -27,10 +27,6 @@ ES_CONFIG_SRC="${CONFIGS_SRC}/elasticsearch.yml"
 LS_CONFIG_SRC="${CONFIGS_SRC}/logstash.yml"
 KB_CONFIG_SRC="${CONFIGS_SRC}/kibana.yml"
 
-# Конфиги пайплайнов Logstash
-LS_CONF1_SRC="${CONFIGS_SRC}/logstash-mysql-source.conf"
-LS_CONF2_SRC="${CONFIGS_SRC}/logstash-nginx-es.conf"
-
 # Целевые пути в системе
 ES_CONFIG_DST="/etc/elasticsearch/elasticsearch.yml"
 LS_CONFIG_DST="/etc/logstash/logstash.yml"
@@ -41,7 +37,7 @@ LS_CONF_DIR="/etc/logstash/conf.d"
 # ПРОВЕРКА НАЛИЧИЯ ВСЕХ ФАЙЛОВ ПЕРЕД СТАРТОМ
 # ============================================================
 echo "Проверка наличия всех deb-пакетов и файлов конфигурации..."
-for file in "$JDK_DEB" "$ES_DEB" "$LS_DEB" "$KB_DEB" "$ES_CONFIG_SRC" "$LS_CONFIG_SRC" "$KB_CONFIG_SRC" "$LS_CONF1_SRC" "$LS_CONF2_SRC"; do
+for file in "$JDK_DEB" "$ES_DEB" "$LS_DEB" "$KB_DEB" "$ES_CONFIG_SRC" "$LS_CONFIG_SRC" "$KB_CONFIG_SRC"; do
     if [ ! -f "$file" ]; then
         echo "Ошибка: Файл не найден: $file"
         exit 1
@@ -55,7 +51,7 @@ echo "============================================================"
 echo "Установка Java (default-jdk) из локального пакета"
 echo "============================================================"
 # Используем apt install, чтобы он подтянул базовые зависимости Java, если они нужны
-apt install "$JDK_DEB" -y
+apt install default-jdk -y
 
 # ============================================================
 # 2. ELASTICSEARCH
@@ -111,9 +107,45 @@ cp "$LS_CONFIG_SRC" "$LS_CONFIG_DST"
 chown root:logstash "$LS_CONFIG_DST"
 chmod 644 "$LS_CONFIG_DST"
 
-echo "Копирование конфигурационных файлов пайплайнов в conf.d/..."
-cp "$LS_CONF1_SRC" "${LS_CONF_DIR}/logstash-mysql-source.conf"
-cp "$LS_CONF2_SRC" "${LS_CONF_DIR}/logstash-nginx-es.conf"
+# Создание конфигурации пайплайна для обработки логов Nginx
+echo "Создание конфигурации Logstash для обработки логов..."
+cat > "${LS_CONF_DIR}/logstash-nginx-es.conf" <<'EOF'
+input {
+    beats {
+        port => 5400
+    }
+}
+
+filter {
+ grok {
+   match => [ "message" , "%{COMBINEDAPACHELOG}+%{GREEDYDATA:extra_fields}"]
+   overwrite => [ "message" ]
+ }
+ mutate {
+   convert => ["response", "integer"]
+   convert => ["bytes", "integer"]
+   convert => ["responsetime", "float"]
+ }
+ date {
+   match => [ "timestamp" , "dd/MMM/YYYY:HH:mm:ss Z" ]
+   remove_field => [ "timestamp" ]
+ }
+ useragent {
+   source => "agent"
+ }
+}
+
+output {
+ elasticsearch {
+   hosts => ["http://localhost:9200"]
+   #cacert => '/etc/logstash/certs/http_ca.crt'
+   #ssl => true
+   index => "weblogs-%{+YYYY.MM.dd}"
+   document_type => "nginx_logs"
+ }
+ stdout { codec => rubydebug }
+}
+EOF
 
 # Выставляем права на папку с пайплайнами, чтобы Logstash мог их прочитать
 chown -R logstash:logstash "$LS_CONF_DIR"
