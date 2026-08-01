@@ -70,6 +70,13 @@ cp "$ES_CONFIG_SRC" "$ES_CONFIG_DST"
 chown root:elasticsearch "$ES_CONFIG_DST"
 chmod 660 "$ES_CONFIG_DST"
 
+echo "Настройка JVM для Elasticsearch..."
+mkdir -p /etc/elasticsearch/jvm.options.d
+cat > /etc/elasticsearch/jvm.options.d/jvm.options <<EOF
+-Xms1g
+-Xmx1g
+EOF
+
 echo "Запуск службы Elasticsearch..."
 systemctl daemon-reload
 systemctl enable --now elasticsearch.service
